@@ -1,0 +1,19 @@
+[package]
+name = "ocron"
+version = "0.1.3"
+authors = []
+edition = "2018"
+
+description = "Cron implementation with an obvious configuration format"
+readme = "README.md"
+homepage = "https://github.com/ametisf/ocron"
+repository = "https://github.com/ametisf/ocron"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+anyhow = "1.0"
+chrono = "0.4"
+
+# My fork, allows line breaks and trailing comas in "inline tables".
+# Crates.io removes the git repository and leaves the upatched TOML.
+toml = { version = "0.5.6", git = "https://github.com/ametisf/toml-rs", features = ["preserve_order"] }

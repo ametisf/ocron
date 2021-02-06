@@ -1,0 +1,81 @@
+# OCRON configuration is a TOML file.  This is an example configuration
+# with all options explained.
+#
+# Before any tables is the global configuration.
+# Global configuration acts like defaults for individual tasks and can be
+# overridden in each task.
+#
+# The values set to in this example are the default values global configuration
+# options would have if they were omitted.
+#
+# `shell` is the program used to run task commands if they're shell commands.
+# It can be any program accepting arguments in the form [shell, "-c", cmd].
+shell = "/bin/sh"
+
+# `env` adds variables to the command's environment.  Removing individual
+# variables from the environment is done by setting their value to false
+# instead of a string.
+env = {}
+
+# `clear_env` determines whether the command should inherit OCRONs environment
+# variables.  true clears the environment and false leaves the environment
+# as is (unless individual variables are overridden with the `env` value).
+clear_env = false
+
+# `on_startup` determines whether a task should be spawned immediately after
+# OCRON starts, or whether it should queue it like it just finished.
+on_startup = false
+
+# `debug` if true, OCRON will print more debugging messages
+debug = false
+
+# Following the global configuration, each task is represented by its own
+# table.  The table name will be printed in logs to identify the task.
+[print_second]
+# `cmd` is the command executed every time a task is due.  It can be either a
+# list of strings or a string.  List of strings gets directly executed, string
+# is run using the configured shell.
+#
+# Each task requires a non-empty command for the config to be accepted.
+cmd = ["date", "+%H:%M:%S"]
+#cmd = "date +%H:%M:%S"
+
+# There are three option which describe when the task is due, `every`, `after`
+# and `on`.
+#
+# Each task requires exactly one of the timing specifications for the config to
+# be accepted.
+#
+# `every` schedules the task to run in regular intervals.  The interval is
+# a sum of the values multiplied by their unit.  The supported units are
+# `seconds`, `minutes`, `hours`, `days` and `weeks`.
+#every = { seconds = 3 }
+
+# `after` supports the same values as `every` the only difference is that the
+# next due time calculated after the command exits.  This variant is useful for
+# frequent runs or long or unpredictable tasks when you want to ensure they
+# never overlap.
+#after = { minutes = 1 }
+
+# `on` sets the requirements for a date and the task gets scheduled when all of
+# them are fulfilled.  Each requirement can be a single value or a list, where
+# a requirement is considered fulfilled when any of the values in the list
+# match the date.
+#
+# Supported criteria are `second`, `minute`, `hour`, `weekday`, `day` and
+# `month`.  `weekday` is parsed by chrono from strings (beware invalid values
+# currently cause serde to explode), other values are criteria are integers in
+# the particular sensible range.
+#
+# When omitted `second` matches only the first second of every minute. Other
+# criteria match anything when omitted.
+on = { second = [0, 10, 20, 30, 40, 50], weekday = ["mon", "fri"] }
+
+# `shell`, `clear_env` and `on_startup` override global configuration per task.
+#shell = "/bin/sh"
+#clear_env = false
+#on_startup = false
+
+# `env` is joined with global `env` configuration, when a key is present in
+# both the task configuration wins.
+#env = {}
