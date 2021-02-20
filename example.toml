@@ -1,7 +1,7 @@
 # OCRON configuration is a TOML file.  This is an example configuration
 # with all options explained.
 #
-# Before any tables is the global configuration.
+# In the main table is the global configuration.
 # Global configuration acts like defaults for individual tasks and can be
 # overridden in each task.
 #
@@ -29,9 +29,12 @@ on_startup = false
 # `debug` if true, OCRON will print more debugging messages
 debug = false
 
-# Following the global configuration, each task is represented by its own
-# table.  The table name will be printed in logs to identify the task.
-[print_second]
+# Each element in the `task` array is a table defining a task.
+[[task]]
+
+# `name` is used to identify the task in logs etc.
+name = "print_second"
+
 # `cmd` is the command executed every time a task is due.  It can be either a
 # list of strings or a string.  List of strings gets directly executed, string
 # is run using the configured shell.

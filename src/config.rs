@@ -104,21 +104,12 @@ fn parse_config(table: Table) -> Result<Config> {
                 config.debug = parse_bool(value)
                     .context("parsing global `debug`")?;
             }
-            _ => {
-                match value {
-                    Value::Table(table) => {
-                        // We use the config before the parsing is finished, because of the
-                        // `preserve_order` feature of the toml crate any global configuration
-                        // which appears after this task in the configuration file is ignored for
-                        // this task.  Let's call it a feature.
-                        let task = parse_task(key.clone(), table, &config)
-                            .with_context(|| format!("parsing task {}", &key))?;
-                        config.tasks.push(task);
-                    }
-                    _ => bail!("unknown option `{}`, valid options are `shell`, `env`, `clear_env`, `on_startup` \
-                                and `debug`. or use a table to create task, found value {:?}", key, value),
-                }
+            "task" => {
+                parse_tasks(value, &mut config)
+                    .context("parsing tasks")?;
             }
+            _ => bail!("unknown option `{}`, valid options are `shell`, `env`, `clear_env`, `on_startup`, \
+                       `debug` and `task`.", key),
         }
     }
 
@@ -166,6 +157,31 @@ fn parse_env(value: Value) -> Result<Map<String, EnvVal>> {
     .collect()
 }
 
+fn parse_tasks(value: Value, config: &mut Config) -> Result<()> {
+    match value {
+        Value::Array(tasks) => {
+            for value in tasks.into_iter() {
+                match value {
+                    Value::Table(table) => {
+                        if let Some(Value::String(name)) = table.get("name") {
+                            let name = name.clone();
+                            let task = parse_task(name.clone(), table, &config)
+                                .with_context(|| format!("parsing task `{}`", name))?;
+                            config.tasks.push(task);
+                        } else {
+                            bail!("missing `name` for task");
+                        }
+                    }
+                    _ => bail!("task must be a table, found {:?}", value),
+                }
+            }
+        }
+        _ => bail!("option `task` must be an array, try using \"[[task]]\", found {:?}", value),
+    }
+
+    Ok(())
+}
+
 fn parse_task(name: String, table: Table, global: &Config) -> Result<Task> {
     let mut command = None;
     let mut time = None;
@@ -211,9 +227,12 @@ fn parse_task(name: String, table: Table, global: &Config) -> Result<Task> {
                 on_startup = parse_bool(value)
                     .context("parsing task `on_startup`")?;
             }
+            "name" => {
+                // nop
+            }
             _ => {
-                bail!("unknown task option, valid options are `cmd`, `after`, `every`, `on`, `shell`, `clear_env` \
-                       and `on_startup`");
+                bail!("unknown task option, valid options are `name`, `cmd`, `after`, `every`, `on`, `shell`, \
+                      `clear_env` and `on_startup`");
             }
         }
     }
